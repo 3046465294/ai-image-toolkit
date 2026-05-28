@@ -18,7 +18,7 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
-UPLOAD_DIR = Path('uploads')
+UPLOAD_DIR = Path(os.environ.get('UPLOAD_DIR', 'uploads'))
 UPLOAD_DIR.mkdir(exist_ok=True)
 
 logging.basicConfig(level=logging.INFO)
