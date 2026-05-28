@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 图片工具箱 - 免费在线AI图片处理</title>
+<meta name="description" content="免费在线AI图片工具：AI图片增强、背景移除、老照片修复、AI图片生成。无需下载，即开即用。">
+<meta name="keywords" content="AI图片增强,AI背景移除,老照片修复,AI图片生成,在线图片处理,免费AI工具">
+<meta property="og:title" content="AI 图片工具箱">
+<meta property="og:description" content="免费在线AI图片处理工具集">
+<meta property="og:type" content="website">
+
+<style>
+  :root {
+    --bg: #050508;
+    --surface: #0d0d14;
+    --surface2: #161622;
+    --border: #252540;
+    --text: #e4e4ec;
+    --text2: #9090a8;
+    --accent: #a78bfa;
+    --accent2: #60a5fa;
+    --accent3: #34d399;
+    --accent4: #f472b6;
+    --gradient: linear-gradient(135deg, var(--accent), var(--accent4));
+    --shadow: 0 0 60px rgba(167, 139, 250, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  /* ── Nav ── */
+  .nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 32px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(20px);
+  }
+  .nav .logo {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .nav .links { display: flex; gap: 20px; font-size: 0.85rem; color: var(--text2); }
+  .nav .links a { color: var(--text2); text-decoration: none; transition: color 0.2s; }
+  .nav .links a:hover { color: var(--text); }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 60px 20px 30px;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+  .hero h1 { font-size: 2.4rem; font-weight: 700; margin-bottom: 12px; }
+  .hero h1 span { background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .hero p { color: var(--text2); font-size: 1.05rem; }
+
+  /* ── Tab bar ── */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 0 20px 10px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 10px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.25s;
+    white-space: nowrap;
+  }
+  .tab:hover { border-color: var(--accent); color: var(--text); }
+  .tab.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .tab .icon { margin-right: 6px; }
+
+  /* ── Main area ── */
+  .main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 10px 20px 40px;
+  }
+
+  .tool-panel { display: none; }
+  .tool-panel.active { display: block; }
+
+  /* ── Upload zone ── */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 16px;
+    padding: 60px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    background: var(--surface);
+    position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent);
+    background: rgba(167, 139, 250, 0.05);
+    box-shadow: var(--shadow);
+  }
+  .upload-zone .upload-icon { font-size: 56px; margin-bottom: 16px; }
+  .upload-zone .upload-text { font-size: 1.1rem; color: var(--text2); }
+  .upload-zone .upload-hint { font-size: 0.82rem; color: var(--border); margin-top: 8px; }
+  .upload-zone input[type="file"] { display: none; }
+
+  /* ── Preview ── */
+  .preview-area { display: none; margin-top: 24px; }
+  .preview-area.visible { display: block; }
+  .preview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 640px) { .preview-grid { grid-template-columns: 1fr; } }
+
+  .preview-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .preview-card .card-header {
+    padding: 10px 16px;
+    font-size: 0.82rem;
+    color: var(--text2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .preview-card img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: contain;
+    background: #0a0a10;
+    display: block;
+  }
+  .preview-card .card-footer { padding: 12px 16px; }
+
+  .btn {
+    padding: 10px 24px;
+    border-radius: 10px;
+    border: none;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn:active { transform: scale(0.96); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #9678e0; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); }
+  .btn-sm { padding: 6px 14px; font-size: 0.8rem; border-radius: 8px; }
+
+  /* ── Generate form ── */
+  .generate-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .generate-form textarea {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 1rem;
+    resize: vertical;
+    min-height: 80px;
+    font-family: inherit;
+  }
+  .generate-form textarea:focus { outline: none; border-color: var(--accent); }
+  .generate-form .row {
+    display: flex;
+    gap: 12px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .generate-form select, .generate-form input[type="number"] {
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text);
+    font-size: 0.85rem;
+  }
+
+  /* ── Loading ── */
+  .loading-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(5,5,8,0.85);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .loading-overlay.visible { display: flex; }
+  .spinner {
+    width: 48px; height: 48px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { color: var(--text2); font-size: 0.95rem; }
+
+  /* ── Ad placeholder ── */
+  .ad-slot {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 20px;
+  }
+  .ad-placeholder {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: var(--border);
+    font-size: 0.78rem;
+    min-height: 90px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── Toast ── */
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 24px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    z-index: 200;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+  .toast.error { border-color: #f87171; color: #fca5a5; }
+
+  /* ── Footer ── */
+  .footer {
+    text-align: center;
+    padding: 30px 20px;
+    color: var(--border);
+    font-size: 0.78rem;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .hero h1 { font-size: 1.6rem; }
+    .tab { font-size: 0.78rem; padding: 8px 14px; }
+    .nav { padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="logo">AI 图片工具箱</div>
+  <div class="links">
+    <a href="#" onclick="switchTab('enhance')">图片增强</a>
+    <a href="#" onclick="switchTab('remove-bg')">背景移除</a>
+    <a href="#" onclick="switchTab('restore')">老照片修复</a>
+    <a href="#" onclick="switchTab('generate')">AI 生图</a>
+  </div>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <h1>用 <span>AI</span> 重新定义图片处理</h1>
+  <p>免费在线工具，无需安装。AI 驱动的图片增强、背景移除、老照片修复和智能生成。</p>
+</section>
+
+<!-- Ad Slot Top -->
+<div class="ad-slot">
+  <div class="ad-placeholder">Google AdSense 广告位 #1 (728x90)</div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('enhance')">
+    <span class="icon">&#9889;</span>AI 增强
+  </button>
+  <button class="tab" onclick="switchTab('remove-bg')">
+    <span class="icon">&#9984;</span>背景移除
+  </button>
+  <button class="tab" onclick="switchTab('restore')">
+    <span class="icon">&#128250;</span>老照片修复
+  </button>
+  <button class="tab" onclick="switchTab('generate')">
+    <span class="icon">&#127912;</span>AI 生图
+  </button>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- ─── AI 图片增强 ─── -->
+  <div class="tool-panel active" id="panel-enhance">
+    <div class="upload-zone" id="upload-enhance" onclick="document.getElementById('file-enhance').click()">
+      <div class="upload-icon">&#128247;</div>
+      <div class="upload-text">点击上传或拖放图片</div>
+      <div class="upload-hint">支持 JPG / PNG / WebP，最大 10MB</div>
+      <input type="file" id="file-enhance" accept="image/*" onchange="handleFile(this, 'enhance')">
+    </div>
+    <div class="preview-area" id="preview-enhance">
+      <div class="preview-grid">
+        <div class="preview-card">
+          <div class="card-header"><span>原图</span><span class="orig-size" id="orig-size-enhance"></span></div>
+          <img id="orig-img-enhance" src="" alt="原图">
+        </div>
+        <div class="preview-card">
+          <div class="card-header"><span>增强后</span><span class="new-size" id="new-size-enhance"></span></div>
+          <img id="result-img-enhance" src="" alt="增强结果">
+          <div class="card-footer">
+            <button class="btn btn-primary btn-sm" onclick="downloadResult('enhance')">下载结果</button>
+            <button class="btn btn-outline btn-sm" onclick="resetTool('enhance')">重新上传</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── AI 背景移除 ─── -->
+  <div class="tool-panel" id="panel-remove-bg">
+    <div class="upload-zone" id="upload-remove-bg" onclick="document.getElementById('file-remove-bg').click()">
+      <div class="upload-icon">&#9984;</div>
+      <div class="upload-text">上传需要去背景的图片</div>
+      <div class="upload-hint">人物、商品、物体均可，自动识别主体</div>
+      <input type="file" id="file-remove-bg" accept="image/*" onchange="handleFile(this, 'remove-bg')">
+    </div>
+    <div class="preview-area" id="preview-remove-bg">
+      <div class="preview-grid">
+        <div class="preview-card">
+          <div class="card-header"><span>原图</span></div>
+          <img id="orig-img-remove-bg" src="" alt="原图">
+        </div>
+        <div class="preview-card">
+          <div class="card-header"><span>移除背景后</span></div>
+          <img id="result-img-remove-bg" src="" alt="去背景结果" style="background: repeating-conic-gradient(#222 0% 25%, #333 0% 50%) 50% / 20px 20px;">
+          <div class="card-footer">
+            <button class="btn btn-primary btn-sm" onclick="downloadResult('remove-bg')">下载结果</button>
+            <button class="btn btn-outline btn-sm" onclick="resetTool('remove-bg')">重新上传</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 老照片修复 ─── -->
+  <div class="tool-panel" id="panel-restore">
+    <div class="upload-zone" id="upload-restore" onclick="document.getElementById('file-restore').click()">
+      <div class="upload-icon">&#128250;</div>
+      <div class="upload-text">上传老照片进行修复</div>
+      <div class="upload-hint">AI 自动修复模糊、噪点，恢复清晰面容</div>
+      <input type="file" id="file-restore" accept="image/*" onchange="handleFile(this, 'restore')">
+    </div>
+    <div class="preview-area" id="preview-restore">
+      <div class="preview-grid">
+        <div class="preview-card">
+          <div class="card-header"><span>原图</span></div>
+          <img id="orig-img-restore" src="" alt="老照片">
+        </div>
+        <div class="preview-card">
+          <div class="card-header"><span>修复后</span><span id="new-size-restore" class="new-size"></span></div>
+          <img id="result-img-restore" src="" alt="修复结果">
+          <div class="card-footer">
+            <button class="btn btn-primary btn-sm" onclick="downloadResult('restore')">下载结果</button>
+            <button class="btn btn-outline btn-sm" onclick="resetTool('restore')">重新上传</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── AI 生图 ─── -->
+  <div class="tool-panel" id="panel-generate">
+    <div class="generate-form">
+      <label style="font-weight:600;display:block;margin-bottom:8px;">描述你想要的图片</label>
+      <textarea id="prompt-input" placeholder="例如：一只戴着墨镜的柴犬在沙滩上冲浪，日落时分，4K画质"></textarea>
+      <div class="row">
+        <select id="gen-style">
+          <option value="">默认风格</option>
+          <option value="photorealistic">写实照片</option>
+          <option value="anime">动漫风格</option>
+          <option value="oil painting">油画风格</option>
+          <option value="3d render">3D 渲染</option>
+          <option value="pixel art">像素风格</option>
+        </select>
+        <select id="gen-size">
+          <option value="512x512">512 x 512</option>
+          <option value="768x768">768 x 768</option>
+          <option value="1024x1024">1024 x 1024</option>
+          <option value="768x1024">768 x 1024 (竖版)</option>
+          <option value="1024x768">1024 x 768 (横版)</option>
+        </select>
+        <button class="btn btn-primary" onclick="startGenerate()">&#127912; 开始生成</button>
+      </div>
+    </div>
+    <div class="preview-area" id="preview-generate">
+      <div class="preview-card" style="max-width:600px;margin:0 auto;">
+        <div class="card-header"><span>生成结果</span><span id="gen-prompt-display" style="font-size:0.75rem;color:var(--accent)"></span></div>
+        <img id="result-img-generate" src="" alt="AI 生成图片">
+        <div class="card-footer">
+          <button class="btn btn-primary btn-sm" onclick="downloadResult('generate')">下载结果</button>
+          <button class="btn btn-outline btn-sm" onclick="resetTool('generate')">重新生成</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Ad Slot Bottom -->
+<div class="ad-slot">
+  <div class="ad-placeholder">Google AdSense 广告位 #2 (728x90)</div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">AI 正在处理中，请稍候...</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Footer -->
+<footer class="footer">
+  <p>
+    <a href="/about" style="color:inherit;text-decoration:none;">关于我们</a> &nbsp;|&nbsp;
+    <a href="/privacy" style="color:inherit;text-decoration:none;">隐私政策</a> &nbsp;|&nbsp;
+    <a href="/terms" style="color:inherit;text-decoration:none;">使用条款</a> &nbsp;|&nbsp;
+    <a href="/contact" style="color:inherit;text-decoration:none;">联系我们</a>
+  </p>
+  <p style="margin-top:8px;">AI 图片工具箱 &copy; 2025</p>
+</footer>
+
+<script>
+  const LOADING_MESSAGES = {
+    'enhance': 'AI 正在增强图片清晰度...',
+    'remove-bg': 'AI 正在识别并移除背景...',
+    'restore': 'AI 正在修复老照片...',
+    'generate': 'AI 正在创作图片，请耐心等待...',
+  };
+
+  let currentTool = 'enhance';
+  let results = {}; // { enhance: dataURL, 'remove-bg': dataURL, ... }
+
+  function switchTab(tool) {
+    currentTool = tool;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelector(`.tab[onclick*="${tool}"]`)?.classList.add('active');
+    document.querySelectorAll('.tool-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${tool}`).classList.add('active');
+  }
+
+  function showLoading(text) {
+    document.getElementById('loading-text').textContent = text;
+    document.getElementById('loading').classList.add('visible');
+  }
+
+  function hideLoading() {
+    document.getElementById('loading').classList.remove('visible');
+  }
+
+  function toast(msg, isError) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.className = 'toast ' + (isError ? 'error' : '');
+    el.classList.add('show');
+    clearTimeout(el._timeout);
+    el._timeout = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  function handleFile(input, tool) {
+    const file = input.files[0];
+    if (!file) return;
+
+    // Preview original
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const origImg = document.getElementById(`orig-img-${tool}`);
+      if (origImg) origImg.src = e.target.result;
+
+      // Show preview area
+      const preview = document.getElementById(`preview-${tool}`);
+      if (preview) preview.classList.add('visible');
+
+      // Hide upload zone
+      const upload = document.getElementById(`upload-${tool}`);
+      if (upload) upload.style.display = 'none';
+
+      // Process
+      processImage(file, tool);
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function processImage(file, tool) {
+    showLoading(LOADING_MESSAGES[tool]);
+
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const resp = await fetch(`/api/tools/${tool}`, { method: 'POST', body: formData });
+      const data = await resp.json();
+
+      if (!resp.ok || data.error) {
+        throw new Error(data.error || '处理失败');
+      }
+
+      results[tool] = data.result;
+      document.getElementById(`result-img-${tool}`).src = data.result;
+
+      // Update size info
+      if (data.enhanced_size) {
+        document.getElementById(`new-size-enhance`).textContent = data.enhanced_size;
+      }
+      if (data.restored_size) {
+        document.getElementById(`new-size-restore`).textContent = data.restored_size;
+      }
+
+      toast('处理完成！');
+    } catch (err) {
+      toast(err.message, true);
+      resetTool(tool);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  async function startGenerate() {
+    const promptInput = document.getElementById('prompt-input');
+    const prompt = promptInput.value.trim();
+    if (prompt.length < 2) {
+      toast('请输入更详细的图片描述', true);
+      return;
+    }
+
+    // Build full prompt with style
+    const style = document.getElementById('gen-style').value;
+    let fullPrompt = prompt;
+    if (style) fullPrompt += `, ${style} style`;
+
+    const size = document.getElementById('gen-size').value;
+    const [width, height] = size.split('x').map(Number);
+
+    showLoading(LOADING_MESSAGES['generate']);
+
+    try {
+      const resp = await fetch('/api/tools/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: fullPrompt, width, height }),
+      });
+      const data = await resp.json();
+
+      if (!resp.ok || data.error) {
+        throw new Error(data.error || '生成失败');
+      }
+
+      results['generate'] = data.result;
+      document.getElementById('result-img-generate').src = data.result;
+      document.getElementById('gen-prompt-display').textContent = prompt;
+      document.getElementById('preview-generate').classList.add('visible');
+      document.getElementById('panel-generate').querySelector('.generate-form').style.display = 'none';
+      toast('图片生成完成！');
+    } catch (err) {
+      toast(err.message, true);
+    } finally {
+      hideLoading();
+    }
+  }
+
+  function downloadResult(tool) {
+    const dataUrl = results[tool];
+    if (!dataUrl) { toast('没有可下载的结果', true); return; }
+
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = `ai-result-${Date.now()}.jpg`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  function resetTool(tool) {
+    results[tool] = null;
+    const preview = document.getElementById(`preview-${tool}`);
+    if (preview) preview.classList.remove('visible');
+
+    const upload = document.getElementById(`upload-${tool}`);
+    if (upload) upload.style.display = '';
+
+    const fileInput = document.getElementById(`file-${tool}`);
+    if (fileInput) fileInput.value = '';
+
+    // For generate panel
+    const genForm = document.getElementById(`panel-${tool}`)?.querySelector('.generate-form');
+    if (genForm) genForm.style.display = '';
+  }
+
+  // ── Drag & Drop ──
+  document.querySelectorAll('.upload-zone').forEach(zone => {
+    const tool = zone.id.replace('upload-', '');
+    const fileInput = document.getElementById(`file-${tool}`);
+
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('dragover'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('dragover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        // Set file input and trigger handler
+        const dt = new DataTransfer();
+        dt.items.add(files[0]);
+        fileInput.files = dt.files;
+        handleFile(fileInput, tool);
+      }
+    });
+  });
+
+  // ── Global paste support ──
+  document.addEventListener('paste', e => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (const item of items) {
+      if (item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        const fileInput = document.getElementById(`file-${currentTool}`);
+        if (fileInput && currentTool !== 'generate') {
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          fileInput.files = dt.files;
+          handleFile(fileInput, currentTool);
+        }
+        break;
+      }
+    }
+  });
+</script>
+
+<!-- Google AdSense (replace with your publisher ID when approved) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+</body>
+</html>
