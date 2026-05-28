@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://YOUR_DOMAIN/sitemap.xml
+Sitemap: https://gsj.pythonanywhere.com/sitemap.xml
